@@ -1,8 +1,12 @@
 #SingleInstance, Force
 CoordMode, Pixel, Screen
 
-esc::exitapp
++esc::exitapp
++g:: Gosub, Guild
++m:: Gosub, WarMap
++a:: Gosub, Experiments
 
+Numpad0::
 ~F6::
 	BreakLoop = 1
 return 
@@ -19,38 +23,90 @@ return
 		LoopCount++
 
 		;Gosub, Guild
-		Gosub, Upgrade
-		Gosub, Clicker
+		;Gosub, Upgrade
+		;Gosub, Clicker
+		Gosub, WarMap
 	}
 Return
 
-Guild:
-	ForceRun := Mod(LoopCount,20)
-	Loop, 10
+~F2::
+	BreakLoop = 0
+	LoopCount := 0
+	Loop
 	{
-		ImageSearch, FoundX, FoundY, 10, 40, 1000, 1400, guild.png
-		if (ErrorLevel = 0) {
-			MouseClick, Left, FoundX, FoundY
-			Sleep, 1000
-			MouseClick, Left, 2440, 630
-			Sleep, 1000
-			MouseClick, Left, 400, 1000
-			Break
+		if (BreakLoop = 1) {
+			MsgBox, Loop stopped
+			break
 		}
+		LoopCount++
+		ToolTip, %LoopCount% %A_TimeIdlePhysical% , 35, 250
+
+		Gosub, Upgrade
+		Gosub, Clicker
+		if (Mod(LoopCount, 10) = 0) {
+			Gosub, Guild
+		}
+	}
+Return
+
+Experiments:
+	Send, a
+	Sleep, 700
+
+	PixelGetColor, bgr, 1728, 1441
+	if (bgr = 0x384D65) {
+		MouseClick, Left, 1760, 1614
 		Sleep, 1000
 	}
+
+	Send {Escape}
+Return	
+
+WarMap:
+	Loop, 2
+	{
+		PixelGetColor, bgr, 880, 880
+		if (bgr = 0x429DF2) {
+			MouseClick, Left, 880, 880
+			Sleep, 1000
+			;Send {Esc}
+			Sleep, 2000
+		}
+	}
+	Loop, 1
+	{
+		ImageSearch, FoundX, FoundY, 1080, 700, 3250, 2000, *10 map%A_Index%.bmp
+		MsgBox, %ErrorLevel%
+		if (ErrorLevel = 0) {
+			MsgBox, %A_Index% %FoundX%x%FoundY%
+			MouseClick, Left, FoundX, FoundY
+			Sleep, 1000
+			PixelGetColor, bgr, 1750, 1650
+			;MsgBox, %bgr%
+			if (bgr = 0x08A10B)
+				MouseClick, Left, 1750, 1650
+			Sleep, 1000
+			;Send {Esc}
+		}
+	}
+
 Return
 
 Clicker:
+	;if (A_TimeIdlePhysical < 1000)
+	;	Return
+	
 	MouseMove, 2100, 600
 	Loop, 5
 	{
 		if (BreakLoop = 1)
 			break
 
-		Send, {LButton Down}
+		;Send, {LButton Down}
+		SendInput, {Space Down}
 		Sleep, 3000
-		Send, {LButton Up}
+		SendInput, {Space Up}
+		;Send, {LButton Up}
 	}
 Return
 
@@ -71,49 +127,37 @@ Upgrade:
 		Sleep, 1000
 	}
 
-	PixelGetColor, bgr, 3440, 350
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 350
-		Sleep, 500
-	}
+	Pos := [750, 920, 1080, 1250, 1420, 1570, 1720]
 
-	PixelGetColor, bgr, 3440, 590
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 590
-		Sleep, 500
-	}
-
-	PixelGetColor, bgr, 3440, 830
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 830
-		Sleep, 500
-	}
-
-	PixelGetColor, bgr, 3440, 1060
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 1060
-		Sleep, 500
-	}
-
-	PixelGetColor, bgr, 3440, 1300
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 1300
-		Sleep, 500
-	}
-
-	PixelGetColor, bgr, 3440, 1550
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 1550
-		Sleep, 500
-	}
-
-	PixelGetColor, bgr, 3440, 1780
-	if (bgr = 0x28742B)	{
-		MouseClick left, 3400, 1780
-		Sleep, 500
+	Loop % Pos.Length()
+	{
+		PixelGetColor, bgr, 2900, Pos[A_Index]
+		if (bgr = 0x28742B)	{
+			MouseClick left, 2900, Pos[A_Index]
+			Sleep, 500
+		}
 	}
 
 	Send, u
 	Sleep, 500
 
+Return
+
+Guild:
+	Send, t
+	Sleep, 700
+	MouseClick, Left, 2650, 650
+	Sleep, 700
+    MouseClick, Left, 990, 1000
+	Sleep, 700
+    Loop, 3
+	{
+		MouseClick, Left, 2420, 960
+		Sleep, 700
+	}
+    Loop, 3
+	{
+		Send {Escape}
+		Sleep, 500
+	}
 Return
