@@ -3,8 +3,11 @@ CoordMode, Pixel, Screen
 
 +esc::exitapp
 +g:: Gosub, Guild
++f:: Gosub, GuardianTrain
 +m:: Gosub, WarMap
 +a:: Gosub, Experiments
++w:: Gosub, WMLoot
++l:: Gosub, Library
 
 Numpad0::
 ~F6::
@@ -35,32 +38,75 @@ Return
 	Loop
 	{
 		if (BreakLoop = 1) {
-			MsgBox, Loop stopped
+			ToolTip, "PAUSED", 35, 250
 			break
 		}
 		LoopCount++
-		ToolTip, %LoopCount% %A_TimeIdlePhysical% , 35, 250
+		ToolTip, %LoopCount% %A_TimeIdlePhysical% %A_TimeIdlePhysical% , 35, 250
 
 		Gosub, Upgrade
 		Gosub, Clicker
 		if (Mod(LoopCount, 10) = 0) {
 			Gosub, Guild
+		
+		if (Mod(LoopCount, 30) = 0) {
+			Gosub, Experiments
 		}
+		if (Mod(LoopCount, 50) = 0) {
+			Gosub, WMLoot
+			Gosub, GuardianTrain
+		}
+
 	}
+Return
+
+Library:
+	RunWait, C:\Users\Joci\Downloads\Capture2Text_v4.6.3_64bit\Capture2Text\Capture2Text_CLI.exe --screen-rect "815 571 946 616" --clipboard, , hide
+	msgbox, %Clipboard%
+Return
+
+GuardianTrain:
+	Send, g
+	Sleep, 700
+
+	PixelGetColor, bgr, 2000, 1555
+	MouseMove, 2000, 1555
+	;MsgBox, %bgr%
+	if (bgr = 0x1E7422) {
+		MouseClick, Left, 2000, 1555
+		Sleep, 700
+	}
+
+	Send {Escape}
 Return
 
 Experiments:
 	Send, a
 	Sleep, 700
 
-	PixelGetColor, bgr, 1728, 1441
-	if (bgr = 0x384D65) {
-		MouseClick, Left, 1760, 1614
-		Sleep, 1000
+	PixelGetColor, bgr, 1724, 1414
+	;MouseMove, 1724, 1414
+	;MsgBox, %bgr%
+	if (bgr = 0x654D38) {
+		MouseClick, Left, 1838, 1603
+		Sleep, 700
 	}
 
 	Send {Escape}
-Return	
+Return
+
+WMLoot:
+	Send, m
+	Sleep, 700
+	
+	MouseClick, Left, 3100, 1337
+	Sleep, 700
+	
+	MouseClick, Left, 733, 1860
+	Sleep, 700
+	
+	Send {Escape 2}
+Return
 
 WarMap:
 	Loop, 2
@@ -148,7 +194,7 @@ Guild:
 	Sleep, 700
 	MouseClick, Left, 2650, 650
 	Sleep, 700
-    MouseClick, Left, 990, 1000
+	MouseClick, Left, 990, 1000
 	Sleep, 700
     Loop, 3
 	{
