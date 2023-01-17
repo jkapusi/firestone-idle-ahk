@@ -1,4 +1,5 @@
 #SingleInstance, Force
+SetTitleMatchMode, 2
 CoordMode, Pixel, Screen
 #include <FindText>
 
@@ -9,6 +10,7 @@ CoordMode, Pixel, Screen
 +a:: Gosub, Experiments
 +w:: Gosub, WMLoot
 +l:: Gosub, Library
++i:: Gosub, Liberation
 ^+l::
 	Record := 2
 	Gosub, Library
@@ -22,15 +24,20 @@ return
 
 ~F2::
 	BreakLoop := 0
-	LoopCount := 8
+	LoopCount := 1
 	Loop
 	{
 		if (BreakLoop = 1) {
-			ToolTip, "PAUSED", 35, 250
+			ToolTip, "PAUSED", 10, 115, 1
 			break
 		}
+		if not WinActive("Firestone Idle RPG") {
+			ToolTip, "PAUSED (Inactive window)", 10, 115, 1
+			Sleep, 3000
+			Continue
+		}	
 		LoopCount++
-		ToolTip, %LoopCount% %A_TimeIdlePhysical%, 35, 250
+		ToolTip, %LoopCount% %A_TimeIdlePhysical%, 10, 115, 1
 
 		if (Mod(LoopCount, 4) = 0) {
 			Gosub, Upgrade
@@ -40,8 +47,8 @@ return
 			Gosub, WarMap
 			Sleep, 700
 		}
-		if (Mod(LoopCount, 80) = 0) {
-			Gosub, Experiments
+		if (Mod(LoopCount, 40) = 0) {
+			; Gosub, Experiments
 			Sleep, 700
 			Gosub, Guild
 			Sleep, 700
@@ -50,6 +57,8 @@ return
 			Gosub, Library
 			Sleep, 700
 			Gosub, WMLoot
+			Sleep, 700
+			Gosub, Experiments
 		}
 	}
 Return
@@ -60,7 +69,7 @@ Return
 	MouseGetPos,X,Y
 	IniWrite, %X%, C:\Users\Joci\Desktop\fire.ini, Library, Pos%Record%X
 	IniWrite, %Y%, C:\Users\Joci\Desktop\fire.ini, Library, Pos%Record%Y
-	ToolTip, Recording position %Record% %X% %Y%, 35, 250
+	ToolTip, Recording position %Record% %X% %Y%, 10, 115, 1
 Return
 
 Library:
@@ -69,23 +78,23 @@ Library:
 	SetMouseDelay, 50
 	
 	; Click to Firestone research
-	MouseClick, Left, 3019, 1861
+	Click2Pos("Library.FirestoneButton", 0)
 	Sleep, 700
 
 	if (Record > 0) {
-		ToolTip, Recording position, 35, 250
+		ToolTip, Recording position, 10, 115, 1
 		Return
 	}
 
 	; Detect second slot is active
-	PixelGetColor, bgr, 2369, 1815
+	;PixelGetColor, bgr, 2369, 1815
 	;MsgBox, %bgr%
-	if (bgr = 0x386992a) {
-		Send {Escape}
-		Return
-	}
+	;if (bgr = 0x386992a) {
+	;	Send {Escape}
+	;	Return
+	;}
 
-	Sleep, 700
+	;Sleep, 700
 	
 	;; 1st slot
 	IniRead, X, C:\Users\Joci\Desktop\fire.ini, Library, Pos1X
@@ -95,13 +104,13 @@ Library:
 	MouseMove, 1000, 1000
 	Sleep, 700
 
-	PixelGetColor, bgr, 1528, 1570
-	MouseMove, 1528, 1570
+	PixelGetColor, bgr, 765, 786
+	MouseMove, 765, 786
 	;MsgBox, %bgr%
 
 	Sleep, 700
 	if (bgr = 0x08A10B) {
-		MouseClick, Left, 1528, 1570
+		MouseClick, Left, 765, 786
 	} else {
 		;MsgBox, %bgr%
 		Send {Escape}
@@ -119,13 +128,13 @@ Library:
 	MouseMove, 1000, 1000
 	Sleep, 700
 
-	PixelGetColor, bgr, 1528, 1570
-	MouseMove, 1528, 1570
+	PixelGetColor, bgr, 765, 786
+	MouseMove, 765, 786
 	;MsgBox, %bgr%
 
 	Sleep, 700
 	if (bgr = 0x08A10B) {
-		MouseClick, Left, 1528, 1570
+		MouseClick, Left, 765, 786
 	} else {
 		;MsgBox, %bgr%
 		Send {Escape}
@@ -195,20 +204,43 @@ LibraryNew:
 	Send {Escape}
 Return
 
+Liberation:
+	Send, m
+	Sleep, 700
+	Click2Pos("WMLoot.WarmachineButton", 0)
+
+	if Click2Pos("WMLoot.DailyMission") {
+		if Click2Pos("WMLoot.LiberationOpenBtn") {
+			Pos := [425, 725, 1000, 1275]
+			MouseMove, Pos[A_Index], 800
+
+			Loop % Pos.Length()
+			{
+				PixelGetColor, bgr, Pos[A_Index], 800
+				if (bgr = 0x6590C0)	{
+					; There is no button here
+					Continue
+				}
+				MouseMove, Pos[A_Index], 800
+				Sleep, 300  
+			}
+			MouseClickDrag, Left, 1500, 640, 200, 640, 10
+			Sleep, 1000
+			MouseClickDrag, Left, 450, 640, 1700, 640, 10
+			Sleep, 1000
+			Send {Escape}
+		}
+	}
+	Send {Escape}
+	Send {Escape}
+
+Return
+
 GuardianTrain:
 	Send, g
 	Sleep, 700
 
-	PixelGetColor, bgr, 2030, 1600
-	MouseMove, 2030, 1600
-	IniWrite, %bgr%, C:\Users\Joci\Desktop\fire.ini, GuardianTrain , Last
-
-	;MsgBox, %bgr%
-	IniRead, expectedbgr, C:\Users\Joci\Desktop\fire.ini, GuardianTrain, Expected
-	if (bgr = expectedbgr) {
-		MouseClick, Left, 2030, 1600
-		Sleep, 700
-	}
+	Click2Pos("GuardianTrain.TrainButton")
 
 	Send {Escape}
 Return
@@ -217,13 +249,7 @@ Experiments:
 	Send, a
 	Sleep, 700
 
-	PixelGetColor, bgr, 1724, 1414
-	;MouseMove, 1724, 1414
-	;MsgBox, %bgr%
-	if (bgr = 0x654D38) {
-		MouseClick, Left, 1838, 1603
-		Sleep, 700
-	}
+	Click2Pos("Experiments.DragonBlood")
 
 	Send {Escape}
 Return
@@ -232,10 +258,10 @@ WMLoot:
 	Send, m
 	Sleep, 700
 	
-	MouseClick, Left, 3100, 1337
+	Click2Pos("WMLoot.WarmachineButton")
 	Sleep, 700
 	
-	MouseClick, Left, 733, 1860
+	Click2Pos("WMLoot.LootButton")
 	Sleep, 700
 	
 	Send {Escape 2}
@@ -245,68 +271,36 @@ WarMap:
 	Send, m
 	Sleep, 700
 
-	Numbers:="|<1>**100$14.3zVUBk1k0M0601U0Q05w110Ek4A120kUA8220UU88220UU88220UU88220UU88221UkE7wU"
-	Numbers.="|<2>**100$22.07w07kS0k0A600Mk00m001M0050C0I1g1EAE50X0K2A1A9U4Tg0k1U20A0M1U30A0M3U10Q0A303UM0Q303080TyU00+000c002U00+000g006Tzzm"
-	Numbers.="|<3>**100$22.07w03kC0s0C2008E00l0014004ED0FVa13wM401UE0A11zUA601Uk0A200M800kz010TU4030E041Dkk5Va0Q3k3U00+001c004k01l00A703U7zs2"
-	Numbers.="|<4>**100$23.3yDw46EA84U8E90EUG0X0Y1418282E4E4U9UN0G0W0Y1A182M2kAUB0F0O0y0g001E002U005000/000Hzy0U041008200E400U8010E020U063007wU"
-	Numbers.="|<5>**100$22.3zzwM00F0014004E00l00241zsEA030U0A200UDs20Us800kU01W00281UAkD0FzY100E4010HwA1MNU70w0s002U00O001A00AM03Us0s0zy0U"
-	Numbers.="|<6>**100$23.03z00w3k300kM00UU01W001A002E1kBU6kG0MrY1UwM2zkk70t0M0O0U0I000s081k1s1U6M308k60l0A1W0M1A1k3k2k004U00NU01V006300M3U3U1zw1"
-	Numbers.="|<7>**100$20.Tzzo005001E00Q007001zy0k1U80E60A1020k1U80E60A1020k1U80k60A1060k1080k6081060k1080k20A1U20E0kA06200zU0U"
-	Numbers.="|<8>**100$23.01w00wDU701UM01VU012003A002E3k4U4U90N0G0W0Y1g381k4M00MM01kk00X001g1s1E6M2U8E70FUC0W0M1g0s1k3k004U00NU00X003300Q3U3U1zw1"
-	Numbers.="|<9>**100$23.07w01kC0C070k0330024006E004U20/0T0I0W0s140k681UAk30D070A0+000K021Y0A2C0k47zU8030FwA1aAk2MD0AU00F001W006400MA01UC0C07mamm     uu  mmamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tmamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tmamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     t        uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tmamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tmamm     uu          uu          uu          uu          uu     tm     uu          uu          uu          uu          uu     tzk1"
-	Numbers.="|<0>**100$25.03z00D0s0A070Q00U800M8004A00140M0a0S0G0NU90ME7U881k440k220M310A10U60UE70E82U841E660c120I0X0O0P09U7U4E006A00660031U030M07070C00zw0E"
-	Numbers.="|<:>**100$10.7kla3E50I1EBUXC7U000DlVg2U+0c2UP37sU"
-	
-	FindText().PicLib(Numbers, 1)
-	ok:=FindText(X, Y, 725, 901, 981, 972, 0.3, 0.3, FindText().PicN("0123456789:/"))
-	if (ocr := FindText().OCR(ok, 5, 5, 5)) {
-		;ToolTip, % ocr.text, 35, 250
-	}
-
-	FindText().PicLib("|<0>*142$21.zs7zs0Dy00zU03s00C001k3U40y0UDk41y00Tk03y00Tk03y00Tk03y00Tk03y10TU83w1UD0Q003U00y007k01z00Ty0Dw", 1)
-	FindText().PicLib("|<1>*139$12.y7w1k1U00001U1m1y1y1y1w1w1w1w1w1w1w1w1w1w3w3w3w3w3w3z3U", 1)
-	FindText().PicLib("|<2>*142$19.zUDz01y00S007003000UD0EDU87k47s33s3zs1zs1zs0zs0zs0zs0zs0zk0zk0zk0zs0zw002001000U00M00Q", 1)
-	FindText().PicLib("|<3>*141$18.zUTw03s01k01k00k00kT0wT0zz0zz0zy1y03w07s03s01zs0zy0zy0zy0ny01w000100100300700Tk1zU", 1)
-	FindText().PicLib("|<4>*139$20.wTVz1s7kC1w3UC0s3US0s7UC1s70S1k7UQ3s70y1UD0M3k6001U00E004001000Q007zw1zz0TzkDzw3zz0zzkDzz3U", 1)
-	FindText().PicLib("|<7>*142$16.zzw0000000000000zs7z0Tw3zUDy1zk7z0zs3z0Tw1zUDy0zk7z0Ts3zUDw0zk7z0Tw3zsDzU", 1)
-	FindText().PicLib("|</>*142$11.zVz3y7sDkTUy3w7sDUT1y3w7kTUz1w7sDkT1y3w7sTUz1z7y", 1)
-
-	ok:=FindText(X, Y, 2053, 530, 2369, 623, 0.15, 0.15, FindText().PicN("012347/"))
-	if (ocr := FindText().OCR(ok, 3, 3)) {
-		if (ocr.text == "10/7") {
-			Send {Escape}
-			Sleep, 700
-
-			Return
-		}
-	}
-
-	Loop, 2
+	Loop
 	{
-		PixelGetColor, bgr, 880, 880
-		if (bgr = 0x429DF2) {
-			MouseClick, Left, 880, 880
-			Sleep, 1000
-			;Send {Esc}
-			Sleep, 2000
+		if not Click2Pos("WarMap.Claim") {
+			Break
 		}
+		Sleep, 700
 	}
+	Sleep, 700
+	MouseClick, Left, 529, 448
+	Sleep, 700
+	
 	;Text.="|<nagyito>*170$57.0Tjy0000007bzs000001wyTU00000D7lz000003sy3zU0000TDwDy00007tzkQk0000zzDV700007zkT0w0001zy0Q7s000Dzw1szU001zzs36z000Dzzk3nzU03zzzUS7z00TzzzlsDc03TzzyBktU0NzzzX3XA01zzzwMD1k07zzz3UCT00Tzzsy0nw00zzyDw4Ts00zzXzwXzU00zszzwzy000y7zzDys001lzzlzrY"
-	Text:="|<nagyito>*160$52.03D0000000Mz00000033y000000Tjw000003Wzw00000C/7s00001siDk00007XkDw0000yTkD80007tzUQU000Tj0030001zw1UD0007zk00y000zzk13y003zzU4Nw00DzzU1Vz01jzz063x06zzyMM3q0NzzzX8680bzzyA01U3zzzkU0707zzy60CT0Dzzsw0Fy8"
-	Text.="|<sarkany>*144$71.Tzk0Dq000601zzsDzs000601zzyzzs000A01zzzzzs000M01zzyzzw000M03zzxzww000k03zzzzts001U07zkTzzs001U0DvUTzzk00300TnUTzzk0860BzlkzzzU08S0DzXkzzv018w0zzk0TzzU71w1zzU0Tzz003k3zz10Tzz007U77y3U00y00S087w3001y00w007s7003z07k007sDU0Dzzz000DsDw3zzzy001zsDzztzzs007zs7zzVzzk00Tzk3zz3zz000zzs0000Ty00Xzzw0000Ds01"
-	Text.="|<terkep>*155$43.7zy00007kzzU007w01z0T3z003zynzU00009zs20004zy33002Dz3nk017zVzs00VzkDk00MDs3t00A0w1ws020S1yD010D3znU0U7Vtsk0E3kQM00A1s001020w001k10S000Q0k"
-	Text.="|<kard>*138$35.001U0600200M00801U00k0600300M0CA01U0zk0601X00M03U01U07U0200700A00700k00DU3000DkA000zkk003zkk00DzkU00zztU0DzzzU0zzzz03Vzzy071zrs061z300C1w000C1k001"
-	Text.="|<kormany>*138$53.000007k0000000Tk0000001nU000700370000z006C0001r00Cs0003D1zzU0007Tzzz00007zzzz00007zzzz00007zzbz0000Dzznz0000wzzxz0003zzztz0007zsTvy000TzUyTy001zzXszw003zjzkzs007y87kjs00TsDrlDzk1zVzbaTznzz1zjwzXzzzrzTtT3tzzjyzmzznzzTtzZzz"
-	Text.="|<mancs>*126$43.20T0T0810TkTkA0kTsDs60sDw7y3UQ7y3z1kC7z1zUs73zUzsQ01zkTw000zsDy00MTw7z10yDy3zXsz7z1zlyTlzUzlzTszUTszzwDk7sTzz1U1kTzzU000Dzzk0007zzs0C03zzy1zs3zzz1zz1zzz1zzkztzVzzsDwzkzzy7wDkzzzXyE"
+    Text:="|<nagyito>**60$27.1k000HU004K001WM00BVs03i500FU602A5M0G88s40B2U81E43UG2s3ak5U7g5W07lN803vG002iE000QU"
+	;Text.="|<sarkany>**50$34./w03008M0q04EU5g0100As0Dn04k9cBklko00U0Uk1y021UJw0420JM0G81LU18U7n02U0CG4+40C01c00004E0U71l410o64k0tmM/U0070U000k9LA030W7Tzs2"
+	Text.="|<sarkany>**50$32.E1C0043ss023U3007k0A0040RU0V0580AE1r07tc3A10MUlkk0006A0TU0V09c08E2x0340pM4F07p0Y00v0FX0000EE000A000w630Mt12"
+	Text.="|<terkep>**50$23.0001s0027s060Tc6+0E4q00ss00lq11aq234046048A08EM0EUk01Fk66FUNkF0w0WA0zAsDsNvzsnTU0ws01300E"
+	;Text.="|<kard>*138$35.001U0600200M00801U00k0600300M0CA01U0zk0601X00M03U01U07U0200700A00700k00DU3000DkA000zkk003zkk00DzkU00zztU0DzzzU0zzzz03Vzzy071zrs061z300C1w000C1k001"
+	Text.="|<kard>**50$21.003k01n00MM06300UE08O037k0Ea049U13M0Mq02BU6XM1cq065U0lM03W00yE0AT07Xs0br07Q00R004"
+	;Text.="|<kormany>*138$53.000007k0000000Tk0000001nU000700370000z006C0001r00Cs0003D1zzU0007Tzzz00007zzzz00007zzzz00007zzbz0000Dzznz0000wzzxz0003zzztz0007zsTvy000TzUyTy001zzXszw003zjzkzs007y87kjs00TsDrlDzk1zVzbaTznzz1zjwzXzzzrzTtT3tzzjyzmzznzzTtzZzz"
+	;Text.="|<mancs>*126$43.20T0T0810TkTkA0kTsDs60sDw7y3UQ7y3z1kC7z1zUs73zUzsQ01zkTw000zsDy00MTw7z10yDy3zXsz7z1zlyTlzUzlzTszUTszzwDk7sTzz1U1kTzzU000Dzzk0007zzs0C03zzy1zs3zzz1zz1zzz1zzkztzVzzsDwzkzzy7wDkzzzXyE"
 
-	ok:=FindText(X,Y,,,,,0.15,0.15,Text)
+	ok:=FindText(X,Y,,,,,0.33,0.33,Text)
 	for k, v in ok {
+		ToolTip, % v.x "x" v.y " id: " v.id, 10, 115, 1
 		; MouseMove, v.x, v.y
 		MouseClick, Left, v.x, v.y
 		Sleep, 700
 
 		; If not have enough squads (brown letter)
-		PixelGetColor, bgr, 1726, 1824
+		PixelGetColor, bgr, 900, 903
 		if (bgr = 0x102754) {
 			Sleep, 1000
 			MouseMove, 880, 880
@@ -315,18 +309,10 @@ WarMap:
 		}
 
 		; Start mission if green
-		PixelGetColor, bgr, 1922, 1771
-		if (bgr = 0x059F0B) {
-			MouseClick, Left, 1922, 1771
-			Sleep, 1000
-		}
+		Click2Pos("WarMap.StartMission")
 
 		; Claim rewards
-		PixelGetColor, bgr, 1882, 1766
-		if (bgr = 0xFFFFFF) {
-			MouseClick, Left, 1882, 1766
-			Sleep, 1000
-		}
+		Click2Pos("WarMap.ClaimReward")
 
 		MouseMove, 880, 880
 		Send {Esc}
@@ -346,8 +332,9 @@ Clicker:
 	;if (A_TimeIdlePhysical < 1000)
 	;	Return
 	
-	MouseMove, 2100, 600
-	Loop, 5
+	MouseMove, 1150, 275
+
+ 	Loop, 5
 	{
 		if (BreakLoop = 1)
 			break
@@ -361,15 +348,6 @@ Clicker:
 Return
 
 Upgrade:
-	; is there a pending update
-	ForceRun := Mod(LoopCount,2)
-
-	PixelGetColor, bgr, 2910, 1884
-	if (bgr != 0xF40000) {
-		if (ForceRun != 0) 
-			Return
-	}
-
 	PixelGetColor, bgr, 3746, 193
 	;MsgBox, %bgr%
 	if (bgr != 0xCEFAFF) {
@@ -377,18 +355,18 @@ Upgrade:
 		Sleep, 1000
 	}
 
-	Pos := [760, 920, 1080, 1249, 1420, 1567, 1720]
+	Pos := [380, 460, 550, 620, 700, 790, 860]
 
 	Loop % Pos.Length()
 	{
-		PixelGetColor, bgr, 2910, Pos[A_Index]
+		PixelGetColor, bgr, 1460, Pos[A_Index]
 		;IniWrite, %bgr%, C:\Users\Joci\Desktop\fire.ini, Upgrade, A%A_Index%
 		IniWrite, %bgr%, C:\Users\Joci\Desktop\fire.ini, UpgradeLast, A%A_Index%
-		MouseMove, 2910, Pos[A_Index]
+		MouseMove, 1460, Pos[A_Index]
 		;MsgBox, %bgr%
 		IniRead, expectedbgr, C:\Users\Joci\Desktop\fire.ini, Upgrade, A%A_Index%
 		if (bgr = expectedbgr)	{
-			MouseClick left, 2910, Pos[A_Index]
+			MouseClick left, 1460, Pos[A_Index]
 			Send {Space}
 			Sleep, 300  
 		}
@@ -402,13 +380,13 @@ Return
 Guild:
 	Send, t
 	Sleep, 700
-	MouseClick, Left, 2650, 650
+	Click2Pos("Guild.Guild", 0)
 	Sleep, 700
-	MouseClick, Left, 990, 1000
+	Click2Pos("Guild.Expeditions", 0)
 	Sleep, 700
     Loop, 3
 	{
-		MouseClick, Left, 2420, 960
+		Click2Pos("Guild.ClaimAndStart", 0)
 		Sleep, 700
 	}
     Loop, 3
@@ -417,3 +395,75 @@ Guild:
 		Sleep, 500
 	}
 Return
+
+WaitForColor(color, X, Y) {
+	PixelGetColor, color, X, Y
+	While !(color = "0xDCDCDC") {
+		PixelGetColor, color, X, Y
+		Sleep, 250
+	}
+}
+
+NamedPos(name) {
+	If InStr(name, ".") {
+		tmp := StrSplit(name, ".")
+		name := tmp[2]
+		grp := tmp[1]
+	} else {
+		grp := "Click2Pos"
+	}
+	IniRead, values, C:\Users\Joci\Desktop\fire.ini, %grp%, %name%
+	if (values = "ERROR") {
+		ToolTip, %grp%.%name% please right click to the position, 10, 115, 1
+		KeyWait, RButton, D
+		MouseGetPos, x, y
+		ToolTip, %grp%.%name% position %x% %y% Right click anywhere to store the color, 10, 115, 1
+		Sleep, 700
+		KeyWait, RButton, D
+		PixelGetColor, bgr, x, y
+		IniWrite, %x%/%y%/%bgr%, C:\Users\Joci\Desktop\fire.ini, %grp%, %name%
+	}
+
+	IniRead, values, C:\Users\Joci\Desktop\fire.ini, %grp%, %name%
+	tmp := StrSplit(values, "/")
+	r := {X: tmp[1], Y: tmp[2], color: tmp[3]}
+	Return r
+}
+
+Click2Pos(name, colormatching=1) {
+	If InStr(name, ".") {
+		tmp := StrSplit(name, ".")
+		name := tmp[2]
+		grp := tmp[1]
+	} else {
+		grp := "Click2Pos"
+	}
+
+	IniRead, values, C:\Users\Joci\Desktop\fire.ini, %grp%, %name%
+	if (values = "ERROR") {
+		ToolTip, %grp%.%name% please right click to the position, 10, 115, 1
+		KeyWait, RButton, D
+		MouseGetPos, x, y
+		ToolTip, %grp%.%name% position %x% %y% Right click anywhere to store the color, 10, 115, 1
+		Sleep, 700
+		KeyWait, RButton, D
+		PixelGetColor, bgr, x, y
+		IniWrite, %x%/%y%/%bgr%, C:\Users\Joci\Desktop\fire.ini, %grp%, %name%
+	} else {
+		tmp := StrSplit(values, "/")
+		;MsgBox % "Click2Pos value for " . grp . "/" . name . " is " . tmp[1] . "x" . tmp[2] . " - " . tmp[3]
+		if (colormatching != 0) {
+			MouseMove, tmp[1] - 100, tmp[2] - 100
+			Sleep, 300
+			PixelGetColor, bgr, tmp[1], tmp[2]
+			MouseMove, tmp[1], tmp[2]
+		}
+		if (bgr = tmp[3] OR colormatching = 0) {
+			MouseClick, Left, tmp[1], tmp[2]
+			Sleep, 1000
+			Return 1
+		} else {
+			Return 0
+		}
+	}
+}
